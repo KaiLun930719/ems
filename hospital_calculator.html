@@ -272,6 +272,25 @@
             { id: 'morphine', name: '嗎啡', price: 1200, cost: 850, note: '重度創傷或手術後強力止痛' }
         ];
 
+        // 新增非醫療與行政項目（會合併進同一份清單以便統一計算）
+        const nonMedicalItems = [
+            { id: 'reg_outpatient', name: '門診掛號', price: 200, cost: 0, note: '門診掛號費 (行政)' },
+            { id: 'reg_emergency', name: '急診掛號', price: 500, cost: 0, note: '急診掛號費 (行政)' },
+            { id: 'room_nhi', name: '健保房 (一天)', price: 1000, cost: 0, note: '住院房間費（健保房，上限五天）' },
+            { id: 'room_double', name: '雙人房 (一天)', price: 3000, cost: 0, note: '非強制項目 - 雙人房' },
+            { id: 'room_vip', name: 'VIP/單人房 (一天)', price: 5000, cost: 0, note: '非強制項目 - 單人/貴賓房' },
+            { id: 'room_isolation', name: '負壓隔離 (一天)', price: 5000, cost: 0, note: '負壓隔離病房（非強制）' },
+            { id: 'area_central', name: '區域費用 - 中部', price: 1500, cost: 0, note: '出車加收費用 - 中部' },
+            { id: 'area_north', name: '區域費用 - 北部', price: 2500, cost: 0, note: '出車加收費用 - 北部' },
+            { id: 'area_urban', name: '區域費用 - 市區', price: 800, cost: 0, note: '出車加收費用 - 市區' },
+            { id: 'area_port', name: '區域費用 - 港口', price: 1500, cost: 0, note: '出車加收費用 - 港口' },
+            { id: 'area_mountain', name: '區域費用 - 山區', price: 3000, cost: 0, note: '出車加收費用 - 山區' },
+            { id: 'special_helicopter', name: '直升機出車費用', price: 5000, cost: 0, note: '特殊出車費用 - 直升機' }
+        ];
+
+        // 將非醫療項目併入主要資料集合（以便 UI 與計算會自動包含）
+        inventoryData.push(...nonMedicalItems);
+
         // 初始化表格生成
         const tbody = document.getElementById('inventory-list');
         

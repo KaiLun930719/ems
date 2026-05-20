@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺島市立慶生醫院 - 現場救治費用計算器</title>
+    <style>
+        :root {
+            --primary-color: #16a085;
+            --primary-hover: #117a65;
+            --dark-bg: #34495e;
+            --light-bg: #f4f9f8;
+            --border-color: #d9d9d9;
+            --input-bg: #fcf3cf;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            color: #333;
+        }
+
+        .header {
+            background-color: var(--dark-bg);
+            color: white;
+            text-align: center;
+            padding: 20px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .instruction {
+            max-width: 1200px;
+            margin: 15px auto;
+            padding: 0 15px;
+            font-size: 14px;
+            color: #555;
+            font-style: italic;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 120px auto;
+            padding: 0 15px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 14px 10px;
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--light-bg);
+        }
+
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        /* 數量增減控制器樣式 */
+        .qty-controller {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--input-bg);
+            border: 1px solid #f1c40f;
+            border-radius: 4px;
+            padding: 2px;
+        }
+
+        .btn-qty {
+            width: 28px;
+            height: 28px;
+            background-color: white;
+            border: 1px solid #ccc;
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .btn-qty:hover {
+            background-color: #f0f0f0;
+        }
+
+        .btn-qty:active {
+            background-color: #ddd;
+        }
+
+        .qty-input {
+            width: 40px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+            outline: none;
+        }
+
+        /* 底部固定總計面板 */
+        .summary-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            z-index: 1000;
+            border-top: 3px solid var(--primary-color);
+        }
+
+        .summary-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .summary-item {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .summary-item span {
+            font-size: 22px;
+            margin-left: 5px;
+        }
+
+        .total-patient { color: #d35400; }
+        .total-cost { color: #7f8c8d; font-size: 14px; }
+        .total-cost span { font-size: 16px; }
+
+        .btn-reset {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-reset:hover {
+            background-color: #c0392b;
+        }
+
+        @media (max-width: 768px) {
+            .summary-content {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .qty-controller {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>臺島市立慶生醫院 - 現場救治費用計算器</h1>
+    </div>
+
+    <div class="instruction">
+        📋 醫護人員說明：請使用「＋」與「－」按鈕調整救治傷患時實際消耗的物品數量。底部將即時為您統計病患應付費用。
+    </div>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>物資代碼</th>
+                    <th>醫療項目名稱</th>
+                    <th>單件醫療售價</th>
+                    <th>物品使用數量</th>
+                    <th>病患應付小計</th>
+                    <th>處置與使用說明</th>
+                </tr>
+            </thead>
+            <tbody id="inventory-list">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="summary-bar">
+        <div class="summary-content">
+            <div class="summary-item">
+                總計消耗品項：<span id="total-qty" style="color:var(--primary-color)">0</span> 件
+            </div>
+            <div class="summary-item total-patient">
+                病患應付總計 (醫療費用)：$<span id="total-patient-fee">0</span>
+            </div>
+            <div class="summary-item total-cost">
+                院方消耗物資總成本：$<span id="total-hospital-cost">0</span>
+            </div>
+            <button id="btn-reset" class="btn-reset">清空資料 (下一位傷患)</button>
+        </div>
+    </div>
+
+    <script>
+        // 醫療物資數據源
+        const inventoryData = [
+            { id: 'armcast', name: '手部石膏', price: 1500, cost: 850, note: '手部骨折固定與石膏包紮費用' },
+            { id: 'armsplint', name: '手部夾板', price: 1500, cost: 850, note: '手臂或手指關節夾板固定' },
+            { id: 'blood250ml', name: '血袋 250ml', price: 500, cost: 350, note: '輸血治療（小劑量）' },
+            { id: 'blood500ml', name: '血袋 500ml', price: 1000, cost: 700, note: '大量失血輸血治療（大劑量）' },
+            { id: 'bodybag', name: '屍袋', price: 1500, cost: 1000, note: 'OHCA經搶救無效後遺體處理' },
+            { id: 'crutch', name: '拐杖', price: 1000, cost: 550, note: '下肢受傷協助行動輔具' },
+            { id: 'ecg', name: '身體檢查/ECG', price: 1500, cost: 1050, note: '心電圖及生命徵象全面篩查' },
+            { id: 'epinephrine', name: '腎上腺素', price: 1000, cost: 700, note: '過敏性休克或心跳驟停急救藥物' },
+            { id: 'field_dressing', name: '敷料', price: 200, cost: 150, note: '常規傷口覆蓋與保護' },
+            { id: 'ifak', name: 'IFAK 便攜急救包', price: 1500, cost: 1000, note: '綜合戰術/便攜現場急救包' },
+            { id: 'legcast', name: '腿部石膏', price: 1500, cost: 850, note: '下肢骨折固定與石膏包紮費用' },
+            { id: 'legsplint', name: '腳部夾板', price: 1500, cost: 850, note: '腳踝或腿部夾板固定' },
+            { id: 'neckbrace', name: '頸圈', price: 1500, cost: 1050, note: '頸椎受傷或疑似頸椎受損固定' },
+            { id: 'packing_bandage', name: '加壓繃帶', price: 300, cost: 200, note: '嚴重出血傷口加壓止血' },
+            { id: 'pager', name: '呼叫器', price: 1000, cost: 700, note: '緊急醫療呼叫聯絡設備' },
+            { id: 'painkillers', name: '止痛藥', price: 300, cost: 200, note: '常規止痛藥物（每錠）' },
+            { id: 'propofol', name: '麻醉/丙泊酚', price: 1000, cost: 700, note: '手術或侵入性處置之全身麻醉' },
+            { id: 'quick_clot', name: '凝血劑', price: 300, cost: 200, note: '創傷快速止血粉/劑' },
+            { id: 'revivekit', name: '緊急復甦包', price: 0, cost: 4500, note: '特殊急救復甦耗材（依成本計）' },
+            { id: 'saline500ml', name: '生理食鹽水 500ml', price: 400, cost: 300, note: '靜脈輸液或大面積傷口沖洗' },
+            { id: 'saline250ml', name: '生理食鹽水 250ml', price: 200, cost: 150, note: '常規靜脈留置針點滴或沖洗' },
+            { id: 'sewing_kit', name: '縫合工具', price: 500, cost: 350, note: '傷口縫合處置費（每公分計）' },
+            { id: 'wheelchair', name: '輪椅', price: 1500, cost: 1000, note: '病患院內或出院行動協助' },
+            { id: 'ems_mdt', name: 'EMT平板設備', price: 1500, cost: 1000, note: '救護紀錄與病患資訊查詢終端' },
+            { id: 'stretcher', name: '擔架', price: 2000, cost: 1050, note: '急救搬運與轉診移動工具' },
+            { id: 'tourniquet', name: '止血帶', price: 300, cost: 200, note: '四肢大動脈出血緊急止血' },
+            { id: 'morphine', name: '嗎啡', price: 1200, cost: 850, note: '重度創傷或手術後強力止痛' }
+        ];
+
+        // 初始化表格生成
+        const tbody = document.getElementById('inventory-list');
+        
+        inventoryData.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${item.id}</code></td>
+                <td class="text-left" style="font-weight: 500;">${item.name}</td>
+                <td class="text-right">$${item.price.toLocaleString()}</td>
+                <td class="text-center">
+                    <div class="qty-controller">
+                        <button type="button" class="btn-qty" data-index="${index}" data-change="-1" aria-label="減少 ${item.name}">-</button>
+                        <input type="number" class="qty-input" id="qty-${index}" value="0" min="0" step="1" aria-label="數量 ${item.name}">
+                        <button type="button" class="btn-qty" data-index="${index}" data-change="1" aria-label="增加 ${item.name}">+</button>
+                    </div>
+                </td>
+                <td class="text-right" style="font-weight: bold; color: #2c3e50;">$<span id="subtotal-${index}">0</span></td>
+                <td class="text-left" style="color: #7f8c8d; font-size: 13px;">${item.note}</td>
+            `;
+            tbody.appendChild(tr);
+
+            // attach event listeners (separate behavior from markup)
+            const btnMinus = tr.querySelector('.btn-qty[data-change="-1"]');
+            const btnPlus = tr.querySelector('.btn-qty[data-change="1"]');
+            const input = tr.querySelector(`#qty-${index}`);
+
+            btnMinus.addEventListener('click', () => changeQty(index, -1));
+            btnPlus.addEventListener('click', () => changeQty(index, 1));
+
+            // validate on change and allow arrow keys for quick adjustments
+            input.addEventListener('change', () => validateAndCalculate(index));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp') { e.preventDefault(); changeQty(index, 1); }
+                if (e.key === 'ArrowDown') { e.preventDefault(); changeQty(index, -1); }
+            });
+        });
+
+        // 初始計算（確保頁面載入時總計為正確格式）
+        calculateTotal();
+
+        // 數量加減點擊事件
+        function changeQty(index, change) {
+            const input = document.getElementById(`qty-${index}`);
+            let currentVal = parseInt(input.value) || 0;
+            let newVal = currentVal + change;
+            if (newVal < 0) newVal = 0;
+            input.value = newVal;
+            calculateRow(index, newVal);
+            calculateTotal();
+        }
+
+        // 手動修改輸入框事件
+        function validateAndCalculate(index) {
+            const input = document.getElementById(`qty-${index}`);
+            let val = parseInt(input.value);
+            if (isNaN(val) || val < 0) {
+                val = 0;
+            }
+            input.value = val;
+            calculateRow(index, val);
+            calculateTotal();
+        }
+
+        // 計算單行小計
+        function calculateRow(index, qty) {
+            const item = inventoryData[index];
+            const subtotalSpan = document.getElementById(`subtotal-${index}`);
+            const rowSubtotal = item.price * qty;
+            subtotalSpan.innerText = rowSubtotal.toLocaleString();
+        }
+
+        // 計算整體總計 (病患應付、院方成本、耗材總數)
+        function calculateTotal() {
+            let totalQty = 0;
+            let totalPatientFee = 0;
+            let totalHospitalCost = 0;
+
+            inventoryData.forEach((item, index) => {
+                const qty = parseInt(document.getElementById(`qty-${index}`).value) || 0;
+                totalQty += qty;
+                totalPatientFee += item.price * qty;
+                totalHospitalCost += item.cost * qty;
+            });
+
+            document.getElementById('total-qty').innerText = totalQty.toLocaleString();
+            document.getElementById('total-patient-fee').innerText = totalPatientFee.toLocaleString();
+            document.getElementById('total-hospital-cost').innerText = totalHospitalCost.toLocaleString();
+        }
+
+        // 一鍵重置清空
+        function resetCalculator() {
+            if (confirm("確定要清空目前所有輸入的數據，開始計算下一位傷患嗎？")) {
+                inventoryData.forEach((item, index) => {
+                    document.getElementById(`qty-${index}`).value = 0;
+                    document.getElementById(`subtotal-${index}`).innerText = "0";
+                });
+                calculateTotal();
+            }
+        }
+
+        // 以事件綁定替代 inline onclick（更利於可測試與可維護）
+        const btnReset = document.getElementById('btn-reset');
+        if (btnReset) btnReset.addEventListener('click', resetCalculator);
+    </script>
+</body>
+</html>
